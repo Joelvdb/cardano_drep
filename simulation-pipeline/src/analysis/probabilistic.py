@@ -78,18 +78,23 @@ def run_probabilistic_analysis(config):
 
             u_cur = _utility(oi, drep_op[cur])
             u_best = _utility(oi, drep_op[best])
-            delta_u = u_best - u_cur
+            delta_u = (u_best - u_cur) ** 1
 
-            p_reconsider = max(0.0, min(1.0, 1.0 - si))
+            p_reconsider = max(0.0, min(1.0, 1.0 - si)) ** 1
             p_switch_cond = max(0.0, min(1.0, float(delta_u))) if delta_u > 0 else 0.0
-            p_overall = p_reconsider * p_switch_cond
+
+            p_overall = p_reconsider * (p_switch_cond**si)
 
             switched = 0
             # Check for switch
+            # if (
+            #     (rng.random() < p_reconsider)
+            #     and (delta_u > 0)
+            #     and (rng.random() < p_switch_cond)
+            # ):
             if (
-                (rng.random() < p_reconsider)
-                and (delta_u > 0)
-                and (rng.random() < p_switch_cond)
+                (delta_u > 0)
+                and (rng.random() < 0)
             ):
                 current_map[aid] = best
                 switched = 1

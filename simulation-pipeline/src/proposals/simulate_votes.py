@@ -1,13 +1,6 @@
 import pandas as pd
 from pathlib import Path
-
-# --- Configuration for all proposal simulations ---
-PROPOSALS = [
-    {"id": "p1", "opinion": 0.0},
-    # {"id": "p2", "opinion": 0.75},
-]
-# Example rule: vote 'yes' if opinion diff < 0.2
-VOTING_THRESHOLD = 0.5
+import numpy as np
 
 
 def simulate_direct_votes(config):
@@ -26,11 +19,14 @@ def simulate_direct_votes(config):
         if epoch_delegs.empty:
             continue
 
-        for p in PROPOSALS:
+        for p in config.PROPOSALS:
+            prop_op = p["opinion"]
+            thresh = config.VOTING_THRESHOLD
+            prop_min = max(0.0, prop_op - thresh)
+            prop_max = min(1.0, prop_op + thresh)
+
             # Rule: Delegator votes 'FOR' if their opinion is close to the proposal
-            epoch_delegs["vote"] = (
-                epoch_delegs["opinion"] - p["opinion"]
-            ).abs() < VOTING_THRESHOLD
+            epoch_delegs["vote"] = (epoch_delegs["opinion"] - prop_op).abs() < thresh
 
             yes_stake = epoch_delegs[epoch_delegs["vote"] == True]["stake"].sum()
             no_stake = epoch_delegs[epoch_delegs["vote"] == False]["stake"].sum()
@@ -39,9 +35,11 @@ def simulate_direct_votes(config):
                 {
                     "epoch": epoch,
                     "proposal_id": p["id"],
-                    "proposal_opinion": p["opinion"],
-                    "for_stake": yes_stake,  # Use 'for_stake' to match plot script
-                    "against_stake": no_stake,  # Use 'against_stake' to match
+                    "proposal_opinion": prop_op,
+                    "prop_range_min": prop_min,  # <-- NEW
+                    "prop_range_max": prop_max,  # <-- NEW
+                    "for_stake": yes_stake,
+                    "against_stake": no_stake,
                     "outcome": "Pass" if yes_stake > no_stake else "Fail",
                 }
             )
@@ -68,11 +66,14 @@ def simulate_drep_votes(config, model_name: str, input_file: Path, output_file: 
         if epoch_dreps.empty:
             continue
 
-        for p in PROPOSALS:
+        for p in config.PROPOSALS:
+            prop_op = p["opinion"]
+            thresh = config.VOTING_THRESHOLD
+            prop_min = max(0.0, prop_op - thresh)
+            prop_max = min(1.0, prop_op + thresh)
+
             # Rule: DRep votes 'FOR' if their opinion is close to the proposal
-            epoch_dreps["vote"] = (
-                epoch_dreps["opinion"] - p["opinion"]
-            ).abs() < VOTING_THRESHOLD
+            epoch_dreps["vote"] = (epoch_dreps["opinion"] - prop_op).abs() <= thresh
 
             yes_stake = epoch_dreps[epoch_dreps["vote"] == True]["Wprime"].sum()
             no_stake = epoch_dreps[epoch_dreps["vote"] == False]["Wprime"].sum()
@@ -81,7 +82,9 @@ def simulate_drep_votes(config, model_name: str, input_file: Path, output_file: 
                 {
                     "epoch": epoch,
                     "proposal_id": p["id"],
-                    "proposal_opinion": p["opinion"],
+                    "proposal_opinion": prop_op,
+                    "prop_range_min": prop_min,  # <-- NEW
+                    "prop_range_max": prop_max,  # <-- NEW
                     "for_stake": yes_stake,
                     "against_stake": no_stake,
                     "outcome": "Pass" if yes_stake > no_stake else "Fail",

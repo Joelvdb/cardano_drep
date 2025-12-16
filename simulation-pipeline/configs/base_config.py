@@ -5,12 +5,27 @@ import random
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- 1. Simulation Parameters ---
-N_DREPS = 100
-N_DELEGATORS = 2000
-EPOCHS = 10
-SHIFT_X = 0.1  # DRep opinion shift per epoch
+N_DREPS = 10
+N_DELEGATORS = 500
+EPOCHS = 11
+SHIFT_X = 0.05  # DRep opinion shift per epoch
 SEED = 421
 
+# --- New Targeted Shift Parameters (Defaults are "off") ---
+TARGET_DREP_ID = "d6"  # e.g., "d1"
+TARGET_DREP_SHIFT = 0.1  # e.g., 0.5
+# --- 2. Proposal Simulation Parameters ---
+PROPOSALS = [
+    {"id": "p1", "opinion": 0},
+    {"id": "p2", "opinion": 0.25},
+    {"id": "p3", "opinion": 0.5},
+    {"id": "p4", "opinion": 0.75},
+    {"id": "p5", "opinion": 1},
+]
+# The opinion range around the proposal to vote 'FOR'
+VOTING_THRESHOLD = 0.25
+# The 'FOR %' required to pass (e.g., 60 for 60%)
+PASS_THRESHOLD = 60
 # --- 2. Probabilistic Model Parameters ---
 # Seed for the probabilistic delegation notebook
 PROBABILISTIC_SEED = 12345
@@ -80,7 +95,7 @@ def create_directories():
         DATA_DIR_OPTIMAL,
         DATA_DIR_FROZEN,
         DATA_DIR_PROBABILISTIC,
-        DATA_DIR_PROPOSALS,  # <-- ADD THIS LINE
+        DATA_DIR_PROPOSALS,
         PLOT_DIR,
     ]
     for d in dirs:
