@@ -94,6 +94,7 @@ class Delegator:
             self.is_frozen = False
             self.current = best_drep
             return
+        self.is_frozen = True
         # if rng.random() >= (1.0 - self.s):
         #     # Maintained delegation due to stickiness
         #     self.is_frozen = True

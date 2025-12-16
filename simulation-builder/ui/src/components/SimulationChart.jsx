@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { downloadSVGAsPNG } from "../utils/download";
 
-const SimulationChart = ({ results }) => {
+const SimulationChart = ({ results, proposalRange }) => {
   if (!results || !results.dreps_history) return null;
 
   const data = results;
@@ -83,6 +83,36 @@ const SimulationChart = ({ results }) => {
 
     return Object.values(epochUtilities).sort((a, b) => a.epoch - b.epoch);
   }, [data]);
+
+  const proposalData = useMemo(() => {
+    if (!data || !data.dreps_history || !data.delegators_history || !proposalRange) return [];
+
+    const epochVotes = {};
+
+    // 1. Calculate DRep Voting Power (Liquid)
+    data.dreps_history.forEach((d) => {
+      if (!epochVotes[d.epoch]) {
+        epochVotes[d.epoch] = { epoch: d.epoch, total_power_for: 0, total_direct_power_for: 0 };
+      }
+      
+      if (d.opinion >= proposalRange.min && d.opinion <= proposalRange.max) {
+        epochVotes[d.epoch].total_power_for += d.w_prime;
+      }
+    });
+
+    // 2. Calculate Direct Voting Power (Delegators)
+    data.delegators_history.forEach((d) => {
+      if (!epochVotes[d.epoch]) {
+         epochVotes[d.epoch] = { epoch: d.epoch, total_power_for: 0, total_direct_power_for: 0 };
+      }
+
+      if (d.opinion >= proposalRange.min && d.opinion <= proposalRange.max) {
+          epochVotes[d.epoch].total_direct_power_for += (d.stake || 0);
+      }
+    });
+
+    return Object.values(epochVotes).sort((a, b) => a.epoch - b.epoch);
+  }, [data, proposalRange]);
 
   const handleDownload = (id, filename) => {
     const container = document.getElementById(id);
@@ -461,6 +491,79 @@ const SimulationChart = ({ results }) => {
                   strokeWidth={2}
                   dot={false}
                   name="Sum Utility"
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Proposal Support Chart */}
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 md:col-span-2">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Proposal Support (Weighted Votes)
+          </h3>
+          <div className="text-xs text-gray-500 mb-2">
+            Range: [{proposalRange?.min}, {proposalRange?.max}]
+          </div>
+          <div id="chart-proposal" className="h-64 w-full relative group">
+            <DownloadButton
+              onClick={() => handleDownload("chart-proposal", "proposal_support.png")}
+            />
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={proposalData}
+                margin={{ top: 10, right: 30, left: 20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis
+                  dataKey="epoch"
+                  stroke="#9CA3AF"
+                  label={{
+                    value: "Epoch",
+                    position: "insideBottom",
+                    offset: -10,
+                    fill: "#6B7280",
+                    fontSize: 12,
+                  }}
+                />
+                <YAxis
+                  stroke="#9CA3AF"
+                  label={{
+                    value: "Total Power (For)",
+                    angle: -90,
+                    position: "insideLeft",
+                    style: { textAnchor: "middle" },
+                    offset: 10,
+                    fill: "#6B7280",
+                    fontSize: 12,
+                  }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#FFF",
+                    borderRadius: "8px",
+                    border: "1px solid #E5E7EB",
+                  }}
+                  itemStyle={{ fontSize: "12px" }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="total_power_for"
+                  stroke="#F59E0B"
+                  strokeWidth={2}
+                  dot={false}
+                  name="DReps (Liquid)"
+                  isAnimationActive={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="total_direct_power_for"
+                  stroke="#10B981"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Delegators (Direct)"
                   isAnimationActive={false}
                 />
               </LineChart>

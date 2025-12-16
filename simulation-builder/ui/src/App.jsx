@@ -14,6 +14,7 @@ function App() {
 
   const [currentEpoch, setCurrentEpoch] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [proposalRange, setProposalRange] = useState({ min: 0, max: 0.5 });
 
   // Playback Loop
   useEffect(() => {
@@ -179,6 +180,71 @@ function App() {
                 Export Config
               </button>
 
+              {/* Proposal Analysis Controls */}
+              <div className="mt-6 pt-4 border-t border-indigo-200">
+                  <h3 className="font-semibold text-indigo-900 mb-2 text-sm">Proposal Analysis</h3>
+                  <div className="space-y-3">
+                      <div>
+                          <div className="flex justify-between items-center mb-1">
+                              <label className="text-xs font-medium text-indigo-700">Min Opinion</label>
+                              <input
+                                  type="number"
+                                  min="0"
+                                  max="1"
+                                  step="0.01"
+                                  value={proposalRange.min}
+                                  onChange={(e) => {
+                                      const val = Math.max(0, Math.min(1, parseFloat(e.target.value)));
+                                      setProposalRange(prev => ({ ...prev, min: Math.min(val, prev.max) }));
+                                  }}
+                                  className="w-16 text-xs border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-1"
+                              />
+                          </div>
+                          <input 
+                              type="range" 
+                              min="0" 
+                              max="1" 
+                              step="0.01"
+                              value={proposalRange.min} 
+                              onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  setProposalRange(prev => ({ ...prev, min: Math.min(val, prev.max) }));
+                              }}
+                              className="w-full h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          />
+                      </div>
+                      <div>
+                          <div className="flex justify-between items-center mb-1">
+                              <label className="text-xs font-medium text-indigo-700">Max Opinion</label>
+                              <input
+                                  type="number"
+                                  min="0"
+                                  max="1"
+                                  step="0.01"
+                                  value={proposalRange.max}
+                                  onChange={(e) => {
+                                      const val = Math.max(0, Math.min(1, parseFloat(e.target.value)));
+                                      setProposalRange(prev => ({ ...prev, max: Math.max(val, prev.min) }));
+                                  }}
+                                  className="w-16 text-xs border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-1"
+                              />
+                          </div>
+                          <input 
+                              type="range" 
+                              min="0" 
+                              max="1" 
+                              step="0.01"
+                              value={proposalRange.max} 
+                              onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  setProposalRange(prev => ({ ...prev, max: Math.max(val, prev.min) }));
+                              }}
+                              className="w-full h-2 bg-indigo-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                          />
+                      </div>
+                  </div>
+              </div>
+
               {/* Playback Controls */}
               {simulationResults && (
                 <div className="mt-6 pt-4 border-t border-indigo-200">
@@ -210,6 +276,8 @@ function App() {
                     />
                 </div>
               )}
+
+
             </div>
           )}
         </div>
@@ -234,7 +302,7 @@ function App() {
 
           {simulationResults && (
             <section className="animate-fade-in-up">
-              <SimulationChart results={simulationResults} />
+              <SimulationChart results={simulationResults} proposalRange={proposalRange} />
             </section>
           )}
 
